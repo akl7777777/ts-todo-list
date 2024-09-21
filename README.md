@@ -1,65 +1,106 @@
-# ts-todo-list
+# TS-Todo-List
 
-ts-todo-list 是一个使用 TypeScript 构建的全栈待办事项列表应用。它结合了 React 前端和 Express 后端，提供了一个类型安全、高效的任务管理解决方案。
+TS-Todo-List 是一个使用 TypeScript 构建的全栈待办事项应用程序。它结合了 React 前端和 Express 后端，并使用 MySQL 数据库进行数据存储。
 
-## 特性
+## 功能特性
 
-- TypeScript: 前后端全面类型支持，提高代码质量和开发效率
-- React: 构建响应式和用户友好的前端界面
-- Express: 搭建强大而灵活的后端 API
-- SQLite: 使用轻量级数据库进行本地数据存储
-- 文件上传: 支持为待办事项添加文件和图片附件
-- 实时更新: 即时标记任务完成状态，提高用户体验
+- 添加新的待办事项
+- 查看所有待办事项列表
+- 将待办事项标记为已完成
+- 删除待办事项
+- 使用 MySQL 数据库进行持久化存储
 
-## 快速开始
+## 技术栈
 
-1. 克隆仓库
-   ```
-   git clone https://github.com/yourusername/ts-todo-list.git
-   cd ts-todo-list
-   ```
-
-2. 安装依赖
-   ```
-   npm run install-all
-   ```
-
-3. 启动开发服务器
-   ```
-   npm start
-   ```
-
-4. 打开浏览器访问 `http://localhost:3000`
+- 前端：React, TypeScript
+- 后端：Node.js, Express, TypeScript
+- 数据库：MySQL
+- ORM：Sequelize
 
 ## 项目结构
 
 ```
 ts-todo-list/
-├── frontend/          # React 前端
+├── frontend/
 │   ├── src/
 │   │   ├── components/
 │   │   ├── services/
 │   │   ├── App.tsx
 │   │   └── index.tsx
 │   ├── public/
-│   ├── package.json
-│   └── tsconfig.json
-├── backend/           # Express 后端
+│   └── package.json
+├── backend/
 │   ├── src/
+│   │   ├── config/
+│   │   │   └── database.ts
 │   │   ├── controllers/
 │   │   ├── models/
 │   │   ├── routes/
 │   │   └── app.ts
-│   ├── package.json
-│   └── tsconfig.json
-├── package.json
+│   ├── .env
+│   └── package.json
 └── README.md
 ```
 
+## 设置和运行
+
+### 前提条件
+
+- Node.js (推荐使用 LTS 版本)
+- MySQL
+
+### 后端设置
+
+1. 进入后端目录：
+   ```
+   cd backend
+   ```
+
+2. 安装依赖：
+   ```
+   npm install
+   ```
+
+3. 创建 `.env` 文件并设置环境变量：
+   ```
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=your_mysql_username
+   DB_PASSWORD=your_mysql_password
+   DB_NAME=ts_todo_list
+   PORT=5566
+   ```
+
+4. 启动后端服务器：
+   ```
+   npm start
+   ```
+
+### 前端设置
+
+1. 进入前端目录：
+   ```
+   cd frontend
+   ```
+
+2. 安装依赖：
+   ```
+   npm install
+   ```
+
+3. 启动前端开发服务器：
+   ```
+   npm start
+   ```
+
+## 使用说明
+
+访问 `http://localhost:3000` 来使用应用程序。你可以添加新的待办事项，标记它们为已完成，或者删除它们。
+
 ## 贡献
 
-我们欢迎所有形式的贡献！如果您发现了 bug 或有新功能建议，请创建一个 issue。如果您想贡献代码，请提交 pull request。
+欢迎贡献！请随时提交 issue 或 pull request。
 
-## 许可
+## 许可证
 
-MIT
+[MIT License](LICENSE)
