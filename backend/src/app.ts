@@ -8,6 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import todoRoutes from './routes/todoRoutes';
 import sequelize from './config/database';
 import Todo from "./models/Todo";
+import authRoutes from "./routes/authRoutes";
 
 const app = express();
 const port = process.env.PORT || 5566;
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
 
 // 错误处理中间件

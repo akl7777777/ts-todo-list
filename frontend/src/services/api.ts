@@ -26,3 +26,13 @@ export const updateTodo = async (id: number, updates: Partial<Todo>): Promise<To
 export const deleteTodo = async (id: number): Promise<void> => {
     await axios.delete(`${API_URL}/todos/${id}`);
 };
+
+export const login = async (email: string, password: string) => {
+    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+    return response.data;
+};
+
+export const register = async (username: string, email: string, password: string) => {
+    const response = await axios.post(`${API_URL}/auth/register`, { username, email, password });
+    return response.data;
+};
