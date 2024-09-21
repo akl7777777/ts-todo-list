@@ -19,16 +19,22 @@ export const login = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ where: { email } });
-        if (!user) {
+
+        if (!user || !(await user.comparePassword(password))) {
             return res.status(401).json({ message: 'Authentication failed' });
         }
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Authentication failed' });
-        }
+
         const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token, userId: user.id, role: user.role });
+        res.json({
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role
+            }
+        });
     } catch (error) {
+        console.error('Login error:', error);
         // @ts-ignore
         res.status(500).json({ message: 'Login failed', error: error.message });
     }

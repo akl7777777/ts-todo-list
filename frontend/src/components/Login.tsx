@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, Typography, Container } from '@mui/material';
+import { TextField, Button, Typography, Container, Alert } from '@mui/material';
 import { login } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,18 +7,31 @@ import { useAuth } from '../contexts/AuthContext';
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
     const { login: authLogin } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
         try {
             const response = await login(email, password);
-            console.log('Logged in:', response);
-            authLogin(response.token);
-            navigate('/todos'); // 登录成功后跳转到待办列表页面
+            console.log('Login response:', response);
+            if (response.token && response.userId && response.role) {
+                const user = {
+                    id: response.userId,
+                    role: response.role,
+                    // 如果后端没有返回用户名，我们可以暂时使用邮箱作为用户名
+                    username: email.split('@')[0]
+                };
+                authLogin(response.token, user);
+                navigate('/todos');
+            } else {
+                throw new Error('Invalid login response');
+            }
         } catch (error) {
             console.error('Login failed:', error);
+            setError('Login failed. Please check your credentials.');
         }
     };
 
@@ -27,6 +40,7 @@ const Login: React.FC = () => {
             <Typography variant="h4" align="center" gutterBottom>
                 Login
             </Typography>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <form onSubmit={handleSubmit}>
                 <TextField
                     label="Email"
@@ -46,7 +60,7 @@ const Login: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                 />
-                <Button type="submit" variant="contained" color="primary" fullWidth>
+                <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
                     Login
                 </Button>
             </form>

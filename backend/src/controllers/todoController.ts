@@ -1,59 +1,99 @@
-import {NextFunction, Request, Response} from 'express';
+import { Request, Response } from 'express';
 import Todo from '../models/Todo';
+import User from '../models/User';
 
-export const getAllTodos = async (req: Request, res: Response, next: NextFunction) => {
+export const createTodo = async (req: Request, res: Response) => {
     try {
-        console.log('Fetching all todos');
-        const todos = await Todo.findAll();
-        console.log('Todos fetched:', todos);
-        res.json(todos);
+        if (!req.user) {
+            return res.status(401).json({ message: 'User not authenticated' });
+        }
+
+        const { title, description, assignedTo } = req.body;
+        const createdBy = req.user.id;
+
+        const todo = await Todo.create({ title, description, assignedTo, createdBy });
+        res.status(201).json(todo);
     } catch (error) {
-        console.error('Error in getAllTodos:', error);
-        next(error);
+        // @ts-ignore
+        res.status(400).json({ message: 'Error creating todo', error: error.message });
     }
 };
 
-export const createTodo = async (req: Request, res: Response, next: NextFunction) => {
+export const getTodos = async (req: Request, res: Response) => {
     try {
-        const { title } = req.body;
-        if (!title) {
-            throw new Error('Title is required');
+        if (!req.user) {
+            return res.status(401).json({ message: 'User not authenticated' });
         }
-        const todo = await Todo.create({ title });
-        res.status(201).json(todo);
+
+        const userId = req.user.id;
+        const userRole = req.user.role;
+
+        let todos;
+        if (userRole === 'admin') {
+            todos = await Todo.findAll({ include: [{ model: User, as: 'assignee' }, { model: User, as: 'creator' }] });
+        } else {
+            todos = await Todo.findAll({
+                where: { assignedTo: userId },
+                include: [{ model: User, as: 'assignee' }, { model: User, as: 'creator' }]
+            });
+        }
+        res.json(todos);
     } catch (error) {
-        console.error('Error in createTodo:', error);
-        next(error); // 将错误传递给错误处理中间件
+        // @ts-ignore
+        res.status(500).json({ message: 'Error retrieving todos', error: error.message });
     }
 };
 
 export const updateTodo = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
-        const { title, completed } = req.body;
-        const todo = await Todo.findByPk(id);
-        if (todo) {
-            await todo.update({ title, completed });
-            res.json(todo);
-        } else {
-            res.status(404).json({ message: "Todo not found" });
+        if (!req.user) {
+            return res.status(401).json({ message: 'User not authenticated' });
         }
+
+        const { id } = req.params;
+        const { completed } = req.body;
+        const userId = req.user.id;
+        const userRole = req.user.role;
+
+        const todo = await Todo.findByPk(id);
+        if (!todo) {
+            return res.status(404).json({ message: 'Todo not found' });
+        }
+
+        if (userRole !== 'admin' && todo.assignedTo !== userId) {
+            return res.status(403).json({ message: 'Not authorized to update this todo' });
+        }
+
+        await todo.update({ completed });
+        res.json(todo);
     } catch (error) {
-        res.status(500).json({ message: "Error updating todo" });
+        // @ts-ignore
+        res.status(500).json({ message: 'Error updating todo', error: error.message });
     }
 };
 
 export const deleteTodo = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
-        const todo = await Todo.findByPk(id);
-        if (todo) {
-            await todo.destroy();
-            res.status(204).send();
-        } else {
-            res.status(404).json({ message: "Todo not found" });
+        if (!req.user) {
+            return res.status(401).json({ message: 'User not authenticated' });
         }
+
+        const { id } = req.params;
+        const userRole = req.user.role;
+
+        if (userRole !== 'admin') {
+            return res.status(403).json({ message: 'Only admins can delete todos' });
+        }
+
+        const todo = await Todo.findByPk(id);
+        if (!todo) {
+            return res.status(404).json({ message: 'Todo not found' });
+        }
+
+        await todo.destroy();
+        res.status(204).send();
     } catch (error) {
-        res.status(500).json({ message: "Error deleting todo" });
+        // @ts-ignore
+        res.status(500).json({ message: 'Error deleting todo', error: error.message });
     }
 };

@@ -1,10 +1,11 @@
 import express from 'express';
-import { getAllTodos, createTodo, updateTodo, deleteTodo } from '../controllers/todoController';
+import { createTodo, getTodos, updateTodo, deleteTodo } from '../controllers/todoController';
 
 const router = express.Router();
 
-router.get('/', getAllTodos);
+// 不需要在这里使用 authMiddleware，因为已经在 app.ts 中应用了
 router.post('/', createTodo);
+router.get('/', getTodos);
 router.put('/:id', updateTodo);
 router.delete('/:id', deleteTodo);
 
