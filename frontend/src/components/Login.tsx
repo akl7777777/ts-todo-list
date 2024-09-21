@@ -17,14 +17,8 @@ const Login: React.FC = () => {
         try {
             const response = await login(email, password);
             console.log('Login response:', response);
-            if (response.token && response.userId && response.role) {
-                const user = {
-                    id: response.userId,
-                    role: response.role,
-                    // 如果后端没有返回用户名，我们可以暂时使用邮箱作为用户名
-                    username: email.split('@')[0]
-                };
-                authLogin(response.token, user);
+            if (response.token && response.user) {
+                authLogin(response.token, response.user);
                 navigate('/todos');
             } else {
                 throw new Error('Invalid login response');

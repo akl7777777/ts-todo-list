@@ -11,6 +11,7 @@ import sequelize from './config/database';
 import Todo from './models/Todo';
 import User from './models/User';
 import {authMiddleware} from "./middleware/auth.middleware";
+import userRoutes from "./routes/userRoutes";
 
 const app = express();
 const port = process.env.PORT || 5566;
@@ -20,6 +21,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/api/todos', authMiddleware, todoRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 
 // 数据库同步

@@ -52,3 +52,13 @@ export const updateTodo = async (id: number, updates: Partial<Todo>): Promise<To
 export const deleteTodo = async (id: number): Promise<void> => {
     await api.delete(`/todos/${id}`);
 };
+
+export const getUsers = async () => {
+    const response = await api.get('/users');
+    return response.data;
+};
+
+export const updateUserRole = async (userId: number, newRole: 'admin' | 'user') => {
+    const response = await api.put(`/users/${userId}/role`, { role: newRole });
+    return response.data;
+};

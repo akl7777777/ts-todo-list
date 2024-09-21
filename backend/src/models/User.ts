@@ -44,7 +44,7 @@ User.init({
 }, {
     sequelize,
     modelName: 'User',
-    tableName: 'users', // 确保表名为 'users'
+    tableName: 'users',
     hooks: {
         beforeCreate: async (user: User) => {
             const salt = await bcrypt.genSalt(10);

@@ -4,17 +4,21 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import TodoList from './components/TodoList';
+import UserManagement from './components/UserManagement';
+import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
     return (
         <AuthProvider>
             <Router>
+                <Navigation />
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route element={<ProtectedRoute />}>
                         <Route path="/todos" element={<TodoList />} />
+                        <Route path="/users" element={<UserManagement />} />
                     </Route>
                     <Route path="/" element={<Navigate to="/todos" replace />} />
                 </Routes>
