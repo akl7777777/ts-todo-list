@@ -1,12 +1,17 @@
 import express from 'express';
-import { createTodo, getTodos, updateTodo, deleteTodo } from '../controllers/todoController';
+import multer from 'multer';
+import { createTodo, getTodos, updateTodo, deleteTodo, uploadFile } from '../controllers/todoController';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
-// 不需要在这里使用 authMiddleware，因为已经在 app.ts 中应用了
+router.use(authMiddleware);
+
 router.post('/', createTodo);
 router.get('/', getTodos);
 router.put('/:id', updateTodo);
 router.delete('/:id', deleteTodo);
+router.post('/:id/upload', upload.single('file'), uploadFile);
 
 export default router;

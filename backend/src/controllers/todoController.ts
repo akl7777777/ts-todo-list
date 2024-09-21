@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import Todo from '../models/Todo';
 import User from '../models/User';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
+
 
 export const createTodo = async (req: Request, res: Response) => {
     try {
@@ -95,5 +99,39 @@ export const deleteTodo = async (req: Request, res: Response) => {
     } catch (error) {
         // @ts-ignore
         res.status(500).json({ message: 'Error deleting todo', error: error.message });
+    }
+};
+
+export const uploadFile = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const todo = await Todo.findByPk(id);
+        if (!todo) {
+            return res.status(404).json({ message: 'Todo not found' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const uploadDir = path.join(__dirname, '..', '..', 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // 生成一个唯一的文件名
+        const fileExtension = path.extname(req.file.originalname);
+        const safeFileName = req.file.originalname.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        const uniqueFileName = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}-${safeFileName}${fileExtension}`;
+        const filePath = path.join(uploadDir, uniqueFileName);
+
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        // 更新 To do 记录，保存文件名
+        await todo.update({ attachment: uniqueFileName });
+
+        res.json({ message: 'File uploaded successfully', fileName: uniqueFileName });
+    } catch (error) {
+        res.status(500).json({ message: 'Error uploading file', error: (error as Error).message });
     }
 };

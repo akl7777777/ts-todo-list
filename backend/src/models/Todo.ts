@@ -9,6 +9,7 @@ class Todo extends Model {
     public completed!: boolean;
     public assignedTo!: number;
     public createdBy!: number;
+    public attachment?: string; // 新增：用于存储文件名
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 }
@@ -46,6 +47,10 @@ Todo.init({
             model: User,
             key: 'id',
         },
+    },
+    attachment: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
 }, {
     sequelize,

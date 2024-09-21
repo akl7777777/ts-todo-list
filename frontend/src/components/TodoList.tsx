@@ -1,47 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, Checkbox, TextField, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, Checkbox, TextField, Button, Paper, Tooltip } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../contexts/AuthContext';
-import { Todo, getTodos, createTodo, updateTodo, deleteTodo, getUsers } from '../services/api';
-
-interface User {
-    id: number;
-    username: string;
-}
+import { Todo, getTodos, createTodo, updateTodo, deleteTodo, uploadFile } from '../services/api';
 
 const TodoList: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
     const [newTodoTitle, setNewTodoTitle] = useState('');
-    const [newTodoDescription, setNewTodoDescription] = useState('');
-    const [assignedTo, setAssignedTo] = useState<number | ''>('');
-    const [users, setUsers] = useState<User[]>([]);
+    const [files, setFiles] = useState<File[]>([]);
     const { user } = useAuth();
 
     useEffect(() => {
         fetchTodos();
-        if (user?.role === 'admin') {
-            fetchUsers();
-        }
-    }, [user]);
+    }, []);
 
     const fetchTodos = async () => {
         const fetchedTodos = await getTodos();
         setTodos(fetchedTodos);
     };
 
-    const fetchUsers = async () => {
-        const fetchedUsers = await getUsers();
-        setUsers(fetchedUsers);
-    };
+    const onDrop = useCallback((acceptedFiles: File[]) => {
+        setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
+    }, []);
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
     const handleCreateTodo = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newTodoTitle.trim() && user) {
-            const assignee = user.role === 'admin' ? (assignedTo as number) : user.id;
-            await createTodo(newTodoTitle, newTodoDescription, assignee);
+            const todo = await createTodo(newTodoTitle, "", user.id);
+            if (files.length > 0) {
+                for (const file of files) {
+                    await uploadFile(todo.id, file);
+                }
+            }
             setNewTodoTitle('');
-            setNewTodoDescription('');
-            setAssignedTo('');
+            setFiles([]);
             fetchTodos();
         }
     };
@@ -52,10 +48,20 @@ const TodoList: React.FC = () => {
     };
 
     const handleDeleteTodo = async (id: number) => {
-        if (user?.role === 'admin') {
-            await deleteTodo(id);
-            fetchTodos();
+        await deleteTodo(id);
+        fetchTodos();
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        const items = e.clipboardData.items;
+        const pastedFiles: File[] = [];
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) pastedFiles.push(blob);
+            }
         }
+        setFiles(prevFiles => [...prevFiles, ...pastedFiles]);
     };
 
     return (
@@ -67,29 +73,28 @@ const TodoList: React.FC = () => {
                     placeholder="Add new todo"
                     fullWidth
                     margin="normal"
+                    onPaste={handlePaste}
                 />
-                <TextField
-                    value={newTodoDescription}
-                    onChange={(e) => setNewTodoDescription(e.target.value)}
-                    placeholder="Description"
-                    fullWidth
-                    margin="normal"
-                />
-                {user?.role === 'admin' && (
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel>Assign to</InputLabel>
-                        <Select
-                            value={assignedTo}
-                            onChange={(e) => setAssignedTo(e.target.value as number)}
-                        >
-                            {users.map((user) => (
-                                <MenuItem key={user.id} value={user.id}>{user.username}</MenuItem>
+                <Paper {...getRootProps()} style={{ padding: 20, textAlign: 'center', marginTop: 10 }}>
+                    <input {...getInputProps()} />
+                    {isDragActive ? (
+                        <p>Drop the files here ...</p>
+                    ) : (
+                        <p>Drag 'n' drop some files here, or click to select files</p>
+                    )}
+                </Paper>
+                {files.length > 0 && (
+                    <div>
+                        <h4>Attached files:</h4>
+                        <ul>
+                            {files.map((file, index) => (
+                                <li key={index}>{file.name}</li>
                             ))}
-                        </Select>
-                    </FormControl>
+                        </ul>
+                    </div>
                 )}
                 <Button type="submit" variant="contained" color="primary">
-                    Add Todo
+                    Add To do
                 </Button>
             </form>
             <List>
@@ -101,7 +106,7 @@ const TodoList: React.FC = () => {
                         />
                         <ListItemText
                             primary={todo.title}
-                            secondary={`${todo.description} | Assigned to: ${todo.assignedTo} | Created by: ${todo.createdBy}`}
+                            secondary={`Assigned to: ${todo.assignedTo} | Created by: ${todo.createdBy}`}
                         />
                         {user?.role === 'admin' && (
                             <ListItemSecondaryAction>

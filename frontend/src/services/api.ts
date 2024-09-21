@@ -2,6 +2,10 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 const API_URL = 'http://localhost:5566/api';
 
+// const api = axios.create({
+//     baseURL: API_URL,
+// });
+
 // 定义 Todo 接口
 export interface Todo {
     id: number;
@@ -10,6 +14,7 @@ export interface Todo {
     completed: boolean;
     assignedTo: number;
     createdBy: number;
+    attachment?: string; // 添加这一行
 }
 
 // 定义 User 接口
@@ -69,4 +74,14 @@ export const getUsers = async (): Promise<User[]> => {
 export const updateUserRole = async (userId: number, newRole: 'admin' | 'user'): Promise<User> => {
     const response = await api.put(`/users/${userId}/role`, { role: newRole });
     return response.data;
+};
+
+export const uploadFile = async (todoId: number, file: File): Promise<void> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    await api.post(`/todos/${todoId}/upload`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
 };
