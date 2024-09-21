@@ -8,8 +8,6 @@ class User extends Model {
     public email!: string;
     public password!: string;
     public role!: 'admin' | 'user';
-    public readonly createdAt!: Date;
-    public readonly updatedAt!: Date;
 
     public async comparePassword(candidatePassword: string): Promise<boolean> {
         return bcrypt.compare(candidatePassword, this.password);
@@ -46,6 +44,7 @@ User.init({
 }, {
     sequelize,
     modelName: 'User',
+    tableName: 'users', // 确保表名为 'users'
     hooks: {
         beforeCreate: async (user: User) => {
             const salt = await bcrypt.genSalt(10);
