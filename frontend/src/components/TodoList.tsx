@@ -1,28 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, Checkbox, TextField, Button } from '@mui/material';
+import { List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, Checkbox, TextField, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../contexts/AuthContext';
-import { Todo, getTodos, createTodo, updateTodo, deleteTodo } from '../services/api';
+import { Todo, getTodos, createTodo, updateTodo, deleteTodo, getUsers } from '../services/api';
+
+interface User {
+    id: number;
+    username: string;
+}
 
 const TodoList: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
     const [newTodoTitle, setNewTodoTitle] = useState('');
+    const [newTodoDescription, setNewTodoDescription] = useState('');
+    const [assignedTo, setAssignedTo] = useState<number | ''>('');
+    const [users, setUsers] = useState<User[]>([]);
     const { user } = useAuth();
 
     useEffect(() => {
         fetchTodos();
-    }, []);
+        if (user?.role === 'admin') {
+            fetchUsers();
+        }
+    }, [user]);
 
     const fetchTodos = async () => {
         const fetchedTodos = await getTodos();
         setTodos(fetchedTodos);
     };
 
+    const fetchUsers = async () => {
+        const fetchedUsers = await getUsers();
+        setUsers(fetchedUsers);
+    };
+
     const handleCreateTodo = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newTodoTitle.trim() && user) {
-            await createTodo(newTodoTitle, "", user.id); // 使用空字符串作为描述，当前用户ID作为assignedTo
+            const assignee = user.role === 'admin' ? (assignedTo as number) : user.id;
+            await createTodo(newTodoTitle, newTodoDescription, assignee);
             setNewTodoTitle('');
+            setNewTodoDescription('');
+            setAssignedTo('');
             fetchTodos();
         }
     };
@@ -33,26 +52,46 @@ const TodoList: React.FC = () => {
     };
 
     const handleDeleteTodo = async (id: number) => {
-        await deleteTodo(id);
-        fetchTodos();
+        if (user?.role === 'admin') {
+            await deleteTodo(id);
+            fetchTodos();
+        }
     };
 
     return (
         <div>
-            {user?.role === 'admin' && (
-                <form onSubmit={handleCreateTodo}>
-                    <TextField
-                        value={newTodoTitle}
-                        onChange={(e) => setNewTodoTitle(e.target.value)}
-                        placeholder="Add new todo"
-                        fullWidth
-                        margin="normal"
-                    />
-                    <Button type="submit" variant="contained" color="primary">
-                        Add Todo
-                    </Button>
-                </form>
-            )}
+            <form onSubmit={handleCreateTodo}>
+                <TextField
+                    value={newTodoTitle}
+                    onChange={(e) => setNewTodoTitle(e.target.value)}
+                    placeholder="Add new todo"
+                    fullWidth
+                    margin="normal"
+                />
+                <TextField
+                    value={newTodoDescription}
+                    onChange={(e) => setNewTodoDescription(e.target.value)}
+                    placeholder="Description"
+                    fullWidth
+                    margin="normal"
+                />
+                {user?.role === 'admin' && (
+                    <FormControl fullWidth margin="normal">
+                        <InputLabel>Assign to</InputLabel>
+                        <Select
+                            value={assignedTo}
+                            onChange={(e) => setAssignedTo(e.target.value as number)}
+                        >
+                            {users.map((user) => (
+                                <MenuItem key={user.id} value={user.id}>{user.username}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
+                <Button type="submit" variant="contained" color="primary">
+                    Add Todo
+                </Button>
+            </form>
             <List>
                 {todos.map((todo) => (
                     <ListItem key={todo.id} dense button>
@@ -62,7 +101,7 @@ const TodoList: React.FC = () => {
                         />
                         <ListItemText
                             primary={todo.title}
-                            secondary={`Assigned to: ${todo.assignedTo} | Created by: ${todo.createdBy}`}
+                            secondary={`${todo.description} | Assigned to: ${todo.assignedTo} | Created by: ${todo.createdBy}`}
                         />
                         {user?.role === 'admin' && (
                             <ListItemSecondaryAction>

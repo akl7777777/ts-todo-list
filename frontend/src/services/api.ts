@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 const API_URL = 'http://localhost:5566/api';
 
-// 定义 To do 接口
+// 定义 Todo 接口
 export interface Todo {
     id: number;
     title: string;
@@ -10,6 +10,14 @@ export interface Todo {
     completed: boolean;
     assignedTo: number;
     createdBy: number;
+}
+
+// 定义 User 接口
+export interface User {
+    id: number;
+    username: string;
+    email: string;
+    role: 'admin' | 'user';
 }
 
 const api = axios.create({
@@ -53,12 +61,12 @@ export const deleteTodo = async (id: number): Promise<void> => {
     await api.delete(`/todos/${id}`);
 };
 
-export const getUsers = async () => {
+export const getUsers = async (): Promise<User[]> => {
     const response = await api.get('/users');
     return response.data;
 };
 
-export const updateUserRole = async (userId: number, newRole: 'admin' | 'user') => {
+export const updateUserRole = async (userId: number, newRole: 'admin' | 'user'): Promise<User> => {
     const response = await api.put(`/users/${userId}/role`, { role: newRole });
     return response.data;
 };
