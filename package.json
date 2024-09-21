@@ -1,0 +1,15 @@
+{
+  "name": "ts-todo-list",
+  "version": "1.0.0",
+  "description": "A TypeScript-based full-stack todo list application",
+  "scripts": {
+    "start": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "keywords": ["typescript", "todo", "react", "express"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^6.2.0"
+  }
+}
