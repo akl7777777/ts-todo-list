@@ -64,6 +64,16 @@ const TodoList: React.FC = () => {
         setFiles(prevFiles => [...prevFiles, ...pastedFiles]);
     };
 
+    const getFileNameFromPath = (path: string) => {
+        return path.split('/').pop() || path;
+    };
+
+    const getOriginalFileName = (fileName: string) => {
+        const parts = fileName.split('-');
+        return parts.slice(2).join('-'); // 跳过时间戳和唯一标识符
+    };
+
+
     return (
         <div>
             <form onSubmit={handleCreateTodo}>
@@ -106,7 +116,18 @@ const TodoList: React.FC = () => {
                         />
                         <ListItemText
                             primary={todo.title}
-                            secondary={`Assigned to: ${todo.assignedTo} | Created by: ${todo.createdBy}`}
+                            secondary={
+                                <>
+                                    {`Assigned to: ${todo.assignedTo} | Created by: ${todo.createdBy}`}
+                                    {todo.attachment && (
+                                        <Tooltip title={getOriginalFileName(todo.attachment)}>
+                                            <IconButton size="small" href={`http://localhost:5566/uploads/${todo.attachment}`} target="_blank">
+                                                <AttachFileIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                </>
+                            }
                         />
                         {user?.role === 'admin' && (
                             <ListItemSecondaryAction>

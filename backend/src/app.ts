@@ -24,6 +24,9 @@ app.use('/api/todos', authMiddleware, todoRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+
 // 数据库同步
 const syncDatabase = async () => {
     try {

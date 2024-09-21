@@ -119,18 +119,16 @@ export const uploadFile = async (req: Request, res: Response) => {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        // 生成一个唯一的文件名
-        const fileExtension = path.extname(req.file.originalname);
-        const safeFileName = req.file.originalname.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        const uniqueFileName = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}-${safeFileName}${fileExtension}`;
-        const filePath = path.join(uploadDir, uniqueFileName);
+        const uniqueId = crypto.randomBytes(8).toString('hex');
+        const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+        const safeFileName = `${Date.now()}-${uniqueId}-${originalName}`;
+        const filePath = path.join(uploadDir, safeFileName);
 
         fs.writeFileSync(filePath, req.file.buffer);
 
-        // 更新 To do 记录，保存文件名
-        await todo.update({ attachment: uniqueFileName });
+        await todo.update({ attachment: safeFileName });
 
-        res.json({ message: 'File uploaded successfully', fileName: uniqueFileName });
+        res.json({ message: 'File uploaded successfully', fileName: safeFileName });
     } catch (error) {
         res.status(500).json({ message: 'Error uploading file', error: (error as Error).message });
     }
