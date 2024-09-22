@@ -45,6 +45,20 @@ api.interceptors.request.use((config: AxiosRequestConfig) => {
     return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // 清除本地存储的身份验证信息
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // 重定向到登录页面
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const login = async (email: string, password: string) => {
     const response = await api.post('/auth/login', { email, password });
     return response.data;

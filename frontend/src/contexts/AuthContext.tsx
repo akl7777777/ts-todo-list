@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, {createContext, useState, useContext, useEffect, ReactNode} from 'react';
+import api from '../services/api';
 
 interface User {
     id: number;
@@ -16,7 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({children}) => {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -28,10 +29,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (token && storedUser) {
                 try {
                     const parsedUser = JSON.parse(storedUser);
+                    // 验证 token 是否有效
+                    await api.get('/auth/verify');
                     setUser(parsedUser);
                     setIsAuthenticated(true);
                 } catch (error) {
-                    console.error('Error parsing stored user:', error);
+                    console.error('Error verifying token:', error);
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
                 }
@@ -57,7 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+        <AuthContext.Provider value={{user, isAuthenticated, isLoading, login, logout}}>
             {children}
         </AuthContext.Provider>
     );

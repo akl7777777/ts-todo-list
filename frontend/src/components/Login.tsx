@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {TextField, Button, Typography, Container, Alert} from '@mui/material';
 import {login} from '../services/api';
 import {Link, useNavigate} from 'react-router-dom';
@@ -8,8 +8,14 @@ const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [sessionExpired, setSessionExpired] = useState(false);
     const navigate = useNavigate();
     const {login: authLogin} = useAuth();
+
+    useEffect(() => {
+        const expired = new URLSearchParams(window.location.search).get('expired');
+        setSessionExpired(expired === 'true');
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,6 +41,11 @@ const Login: React.FC = () => {
                 Login
             </Typography>
             {error && <Alert severity="error" sx={{mb: 2}}>{error}</Alert>}
+            {sessionExpired && (
+                <Alert severity="warning" sx={{mb: 2}}>
+                    您的会话已过期，请重新登录。
+                </Alert>
+            )}
             <form onSubmit={handleSubmit}>
                 <TextField
                     label="Email"
