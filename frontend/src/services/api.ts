@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5566';
 const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/api';
-const FILE_BASE_URL = process.env.REACT_APP_FILE_BASE_URL || 'http://localhost:5566';
+const FILE_BASE_URL = process.env.NODE_ENV === 'production' ? '' : (process.env.REACT_APP_FILE_BASE_URL || 'http://localhost:5566');
 
 const API_URL = process.env.NODE_ENV === 'production' ? '/api' : `${API_BASE_URL}${API_PREFIX}`;
 

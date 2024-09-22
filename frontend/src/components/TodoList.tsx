@@ -93,14 +93,14 @@ const TodoList: React.FC = () => {
         <Container maxWidth="lg">
             <Box my={4}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    Todo List
+                    To do List
                 </Typography>
                 <Grid container spacing={3}>
                     <Grid item xs={12} md={4}>
                         <Paper elevation={3}>
                             <Box p={3}>
                                 <Typography variant="h6" gutterBottom>
-                                    Add New Todo
+                                    Add New To do
                                 </Typography>
                                 <form onSubmit={handleCreateTodo}>
                                     <TextField
