@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { TextField, Button, Typography, Container, Alert } from '@mui/material';
-import { login } from '../services/api';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, {useState} from 'react';
+import {TextField, Button, Typography, Container, Alert} from '@mui/material';
+import {login} from '../services/api';
+import {Link, useNavigate} from 'react-router-dom';
+import {useAuth} from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const { login: authLogin } = useAuth();
+    const {login: authLogin} = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,7 +34,7 @@ const Login: React.FC = () => {
             <Typography variant="h4" align="center" gutterBottom>
                 Login
             </Typography>
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {error && <Alert severity="error" sx={{mb: 2}}>{error}</Alert>}
             <form onSubmit={handleSubmit}>
                 <TextField
                     label="Email"
@@ -54,10 +54,16 @@ const Login: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                 />
-                <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+                <Button type="submit" variant="contained" color="primary" fullWidth sx={{mt: 2}}>
                     Login
                 </Button>
             </form>
+            <Typography align="center" style={{marginTop: '1rem'}}>
+                Don't have an account?{' '}
+                <Link to="/register">
+                    Register here
+                </Link>
+            </Typography>
         </Container>
     );
 };
