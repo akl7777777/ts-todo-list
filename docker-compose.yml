@@ -4,7 +4,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:80"
+      - "3008:80"
     depends_on:
       - backend
 
@@ -22,11 +22,13 @@ services:
 
   db:
     image: mysql:8
+    ports:
+      - "3307:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=rootpassword
       - MYSQL_DATABASE=ts_todo_list
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./mysql_data:/var/lib/mysql
 
 volumes:
   mysql_data:
