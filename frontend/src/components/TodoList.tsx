@@ -4,7 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../contexts/AuthContext';
-import { Todo, getTodos, createTodo, updateTodo, deleteTodo, uploadFile } from '../services/api';
+import {Todo, getTodos, createTodo, updateTodo, deleteTodo, uploadFile, getFileUrl} from '../services/api';
 
 const TodoList: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -121,7 +121,12 @@ const TodoList: React.FC = () => {
                                     {`Assigned to: ${todo.assignedTo} | Created by: ${todo.createdBy}`}
                                     {todo.attachment && (
                                         <Tooltip title={getOriginalFileName(todo.attachment)}>
-                                            <IconButton size="small" href={`http://localhost:5566/uploads/${todo.attachment}`} target="_blank">
+                                            <IconButton
+                                                size="small"
+                                                href={getFileUrl(todo.attachment)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
                                                 <AttachFileIcon />
                                             </IconButton>
                                         </Tooltip>

@@ -1,12 +1,22 @@
 import axios, { AxiosRequestConfig } from 'axios';
 
-const API_URL = 'http://localhost:5566/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5566';
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/api';
+const FILE_BASE_URL = process.env.REACT_APP_FILE_BASE_URL || 'http://localhost:5566';
+
+const API_URL = `${API_BASE_URL}${API_PREFIX}`;
+const api = axios.create({
+    baseURL: API_URL,
+});
+
+export const getFileUrl = (fileName: string) => `${FILE_BASE_URL}/uploads/${fileName}`;
+
 
 // const api = axios.create({
 //     baseURL: API_URL,
 // });
 
-// 定义 Todo 接口
+// 定义 To do 接口
 export interface Todo {
     id: number;
     title: string;
@@ -24,10 +34,6 @@ export interface User {
     email: string;
     role: 'admin' | 'user';
 }
-
-const api = axios.create({
-    baseURL: API_URL,
-});
 
 api.interceptors.request.use((config: AxiosRequestConfig) => {
     const token = localStorage.getItem('token');
@@ -85,3 +91,5 @@ export const uploadFile = async (todoId: number, file: File): Promise<void> => {
         }
     });
 };
+
+export default api;
