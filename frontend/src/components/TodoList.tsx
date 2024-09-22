@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, Checkbox, TextField, Button, Paper, Tooltip, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import {
+    List, ListItem, ListItemText, ListItemSecondaryAction, IconButton,
+    Checkbox, TextField, Button, Paper, Tooltip, Select, MenuItem,
+    FormControl, InputLabel, Container, Grid, Typography, Box, Divider
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { useDropzone } from 'react-dropzone';
@@ -86,99 +90,132 @@ const TodoList: React.FC = () => {
     };
 
     return (
-        <div>
-            <form onSubmit={handleCreateTodo}>
-                <TextField
-                    value={newTodoTitle}
-                    onChange={(e) => setNewTodoTitle(e.target.value)}
-                    placeholder="Add new todo title"
-                    fullWidth
-                    margin="normal"
-                    onPaste={handlePaste}
-                />
-                <TextField
-                    value={newTodoDescription}
-                    onChange={(e) => setNewTodoDescription(e.target.value)}
-                    placeholder="Add todo description"
-                    fullWidth
-                    margin="normal"
-                    multiline
-                    rows={3}
-                />
-                {user?.role === 'admin' && (
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel>Assign to</InputLabel>
-                        <Select
-                            value={assignedTo}
-                            onChange={(e) => setAssignedTo(e.target.value as number)}
-                        >
-                            {users.map((user) => (
-                                <MenuItem key={user.id} value={user.id}>{user.username}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                )}
-                <Paper {...getRootProps()} style={{ padding: 20, textAlign: 'center', marginTop: 10 }}>
-                    <input {...getInputProps()} />
-                    {isDragActive ? (
-                        <p>Drop the files here ...</p>
-                    ) : (
-                        <p>Drag 'n' drop some files here, or click to select files</p>
-                    )}
-                </Paper>
-                {files.length > 0 && (
-                    <div>
-                        <h4>Attached files:</h4>
-                        <ul>
-                            {files.map((file, index) => (
-                                <li key={index}>{file.name}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-                <Button type="submit" variant="contained" color="primary">
-                    Add To do
-                </Button>
-            </form>
-            <List>
-                {todos.map((todo) => (
-                    <ListItem key={todo.id} dense button>
-                        <Checkbox
-                            checked={todo.completed}
-                            onChange={() => handleToggleTodo(todo.id, !todo.completed)}
-                        />
-                        <ListItemText
-                            primary={todo.title}
-                            secondary={
-                                <>
-                                    <div>{todo.description}</div>
-                                    <div>{`Assigned to: ${users.find(u => u.id === todo.assignedTo)?.username || 'Unknown'} | Created by: ${users.find(u => u.id === todo.createdBy)?.username || 'Unknown'}`}</div>
-                                    {todo.attachment && (
-                                        <Tooltip title={getOriginalFileName(todo.attachment)}>
-                                            <IconButton
-                                                size="small"
-                                                href={getFileUrl(todo.attachment)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+        <Container maxWidth="lg">
+            <Box my={4}>
+                <Typography variant="h4" component="h1" gutterBottom>
+                    Todo List
+                </Typography>
+                <Grid container spacing={3}>
+                    <Grid item xs={12} md={4}>
+                        <Paper elevation={3}>
+                            <Box p={3}>
+                                <Typography variant="h6" gutterBottom>
+                                    Add New Todo
+                                </Typography>
+                                <form onSubmit={handleCreateTodo}>
+                                    <TextField
+                                        value={newTodoTitle}
+                                        onChange={(e) => setNewTodoTitle(e.target.value)}
+                                        placeholder="Todo title"
+                                        fullWidth
+                                        margin="normal"
+                                        onPaste={handlePaste}
+                                    />
+                                    <TextField
+                                        value={newTodoDescription}
+                                        onChange={(e) => setNewTodoDescription(e.target.value)}
+                                        placeholder="Todo description"
+                                        fullWidth
+                                        margin="normal"
+                                        multiline
+                                        rows={3}
+                                    />
+                                    {user?.role === 'admin' && (
+                                        <FormControl fullWidth margin="normal">
+                                            <InputLabel>Assign to</InputLabel>
+                                            <Select
+                                                value={assignedTo}
+                                                onChange={(e) => setAssignedTo(e.target.value as number)}
                                             >
-                                                <AttachFileIcon />
-                                            </IconButton>
-                                        </Tooltip>
+                                                {users.map((user) => (
+                                                    <MenuItem key={user.id} value={user.id}>{user.username}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
                                     )}
-                                </>
-                            }
-                        />
-                        {user?.role === 'admin' && (
-                            <ListItemSecondaryAction>
-                                <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteTodo(todo.id)}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            </ListItemSecondaryAction>
-                        )}
-                    </ListItem>
-                ))}
-            </List>
-        </div>
+                                    <Paper {...getRootProps()} sx={{ p: 2, textAlign: 'center', mt: 2, cursor: 'pointer' }}>
+                                        <input {...getInputProps()} />
+                                        {isDragActive ? (
+                                            <Typography>Drop the files here ...</Typography>
+                                        ) : (
+                                            <Typography>Drag 'n' drop files here, or click to select</Typography>
+                                        )}
+                                    </Paper>
+                                    {files.length > 0 && (
+                                        <Box mt={2}>
+                                            <Typography variant="subtitle2">Attached files:</Typography>
+                                            <List dense>
+                                                {files.map((file, index) => (
+                                                    <ListItem key={index}>
+                                                        <ListItemText primary={file.name} />
+                                                    </ListItem>
+                                                ))}
+                                            </List>
+                                        </Box>
+                                    )}
+                                    <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+                                        Add Todo
+                                    </Button>
+                                </form>
+                            </Box>
+                        </Paper>
+                    </Grid>
+                    <Grid item xs={12} md={8}>
+                        <Paper elevation={3}>
+                            <List>
+                                {todos.map((todo) => (
+                                    <React.Fragment key={todo.id}>
+                                        <ListItem dense>
+                                            <Checkbox
+                                                checked={todo.completed}
+                                                onChange={() => handleToggleTodo(todo.id, !todo.completed)}
+                                            />
+                                            <ListItemText
+                                                primary={
+                                                    <Typography variant="subtitle1">
+                                                        {todo.title}
+                                                    </Typography>
+                                                }
+                                                secondary={
+                                                    <Box>
+                                                        <Typography variant="body2" color="textSecondary">
+                                                            {todo.description}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="textSecondary">
+                                                            {`Assigned to: ${users.find(u => u.id === todo.assignedTo)?.username || 'Unknown'} | Created by: ${users.find(u => u.id === todo.createdBy)?.username || 'Unknown'}`}
+                                                        </Typography>
+                                                        {todo.attachment && (
+                                                            <Tooltip title={getOriginalFileName(todo.attachment)}>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    href={getFileUrl(todo.attachment)}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                >
+                                                                    <AttachFileIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )}
+                                                    </Box>
+                                                }
+                                            />
+                                            {user?.role === 'admin' && (
+                                                <ListItemSecondaryAction>
+                                                    <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteTodo(todo.id)}>
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </ListItemSecondaryAction>
+                                            )}
+                                        </ListItem>
+                                        <Divider component="li" />
+                                    </React.Fragment>
+                                ))}
+                            </List>
+                        </Paper>
+                    </Grid>
+                </Grid>
+            </Box>
+        </Container>
     );
 };
 
