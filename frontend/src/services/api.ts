@@ -25,7 +25,8 @@ export interface Todo {
     completed: boolean;
     assignedTo: number;
     createdBy: number;
-    attachment?: string; // 添加这一行
+    dueDate?: Date;
+    attachment?: string;
 }
 
 // 定义 User 接口
@@ -54,13 +55,17 @@ export const register = async (username: string, email: string, password: string
     return response.data;
 };
 
-export const getTodos = async (): Promise<Todo[]> => {
-    const response = await api.get('/todos');
+export const getTodos = async (startDate?: Date | null, endDate?: Date | null): Promise<Todo[]> => {
+    let url = `/todos`;
+    if (startDate && endDate) {
+        url += `?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
+    }
+    const response = await api.get(url);
     return response.data;
 };
 
-export const createTodo = async (title: string, description: string, assignedTo: number): Promise<Todo> => {
-    const response = await api.post('/todos', { title, description, assignedTo });
+export const createTodo = async (title: string, description: string, assignedTo: number, dueDate?: Date): Promise<Todo> => {
+    const response = await api.post('/todos', { title, description, assignedTo, dueDate });
     return response.data;
 };
 

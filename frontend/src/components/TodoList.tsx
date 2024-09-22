@@ -4,19 +4,24 @@ import {
     Checkbox, TextField, Button, Paper, Tooltip, Select, MenuItem,
     FormControl, InputLabel, Container, Grid, Typography, Box, Divider
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../contexts/AuthContext';
 import { Todo, User, getTodos, createTodo, updateTodo, deleteTodo, uploadFile, getFileUrl, getUsers } from '../services/api';
+import dayjs, { Dayjs } from 'dayjs';
 
 const TodoList: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [newTodoTitle, setNewTodoTitle] = useState('');
     const [newTodoDescription, setNewTodoDescription] = useState('');
+    const [newTodoDueDate, setNewTodoDueDate] = useState<Dayjs | null>(null);
     const [assignedTo, setAssignedTo] = useState<number | ''>('');
     const [files, setFiles] = useState<File[]>([]);
+    const [startDate, setStartDate] = useState<Dayjs | null>(null);
+    const [endDate, setEndDate] = useState<Dayjs | null>(null);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -26,12 +31,12 @@ const TodoList: React.FC = () => {
         } else if (user) {
             setUsers([user as User]);
         }
-    }, [user]);
+    }, [user, startDate, endDate]);
 
-    const fetchTodos = async () => {
-        const fetchedTodos = await getTodos();
+    const fetchTodos = useCallback(async () => {
+        const fetchedTodos = await getTodos(startDate?.toDate(), endDate?.toDate());
         setTodos(fetchedTodos);
-    };
+    }, [startDate, endDate]);
 
     const fetchUsers = async () => {
         const fetchedUsers = await getUsers();
@@ -48,7 +53,7 @@ const TodoList: React.FC = () => {
         e.preventDefault();
         if (newTodoTitle.trim() && user) {
             const assignee = user.role === 'admin' ? (assignedTo as number) : user.id;
-            const todo = await createTodo(newTodoTitle, newTodoDescription, assignee);
+            const todo = await createTodo(newTodoTitle, newTodoDescription, assignee, newTodoDueDate?.toDate());
             if (files.length > 0) {
                 for (const file of files) {
                     await uploadFile(todo.id, file);
@@ -56,6 +61,7 @@ const TodoList: React.FC = () => {
             }
             setNewTodoTitle('');
             setNewTodoDescription('');
+            setNewTodoDueDate(null);
             setAssignedTo('');
             setFiles([]);
             fetchTodos();
@@ -89,6 +95,13 @@ const TodoList: React.FC = () => {
         return parts.slice(2).join('-');
     };
 
+    const sortedTodos = [...todos].sort((a, b) => {
+        if (a.completed === b.completed) {
+            return dayjs(a.dueDate).diff(dayjs(b.dueDate));
+        }
+        return a.completed ? 1 : -1;
+    });
+
     return (
         <Container maxWidth="lg">
             <Box my={4}>
@@ -119,6 +132,17 @@ const TodoList: React.FC = () => {
                                         margin="normal"
                                         multiline
                                         rows={3}
+                                    />
+                                    <DatePicker
+                                        label="Due Date"
+                                        value={newTodoDueDate}
+                                        onChange={(date) => setNewTodoDueDate(date)}
+                                        slots={{
+                                            textField: TextField,
+                                        }}
+                                        slotProps={{
+                                            textField: { fullWidth: true, margin: "normal" },
+                                        }}
                                     />
                                     {user?.role === 'admin' && (
                                         <FormControl fullWidth margin="normal">
@@ -162,8 +186,38 @@ const TodoList: React.FC = () => {
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <Paper elevation={3}>
+                            <Box p={2}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6}>
+                                        <DatePicker
+                                            label="Start Date"
+                                            value={startDate}
+                                            onChange={(date) => setStartDate(date)}
+                                            slots={{
+                                                textField: TextField,
+                                            }}
+                                            slotProps={{
+                                                textField: { fullWidth: true },
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <DatePicker
+                                            label="End Date"
+                                            value={endDate}
+                                            onChange={(date) => setEndDate(date)}
+                                            slots={{
+                                                textField: TextField,
+                                            }}
+                                            slotProps={{
+                                                textField: { fullWidth: true },
+                                            }}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Box>
                             <List>
-                                {todos.map((todo) => (
+                                {sortedTodos.map((todo) => (
                                     <React.Fragment key={todo.id}>
                                         <ListItem dense>
                                             <Checkbox
@@ -182,7 +236,7 @@ const TodoList: React.FC = () => {
                                                             {todo.description}
                                                         </Typography>
                                                         <Typography variant="caption" color="textSecondary">
-                                                            {`Assigned to: ${users.find(u => u.id === todo.assignedTo)?.username || 'Unknown'} | Created by: ${users.find(u => u.id === todo.createdBy)?.username || 'Unknown'}`}
+                                                            {`Due: ${dayjs(todo.dueDate).format('YYYY-MM-DD')} | Assigned to: ${users.find(u => u.id === todo.assignedTo)?.username || 'Unknown'} | Created by: ${users.find(u => u.id === todo.createdBy)?.username || 'Unknown'}`}
                                                         </Typography>
                                                         {todo.attachment && (
                                                             <Tooltip title={getOriginalFileName(todo.attachment)}>

@@ -4,47 +4,64 @@ import User from '../models/User';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import { Op } from 'sequelize';
 
 
 export const createTodo = async (req: Request, res: Response) => {
     try {
-        if (!req.user) {
-            return res.status(401).json({ message: 'User not authenticated' });
-        }
+        const { title, description, assignedTo, dueDate } = req.body;
+        const createdBy = req.user!.id;
 
-        const { title, description, assignedTo } = req.body;
-        const createdBy = req.user.id;
+        const todo = await Todo.create({
+            title,
+            description,
+            assignedTo,
+            createdBy,
+            dueDate: dueDate ? new Date(dueDate) : null
+        });
 
-        const todo = await Todo.create({ title, description, assignedTo, createdBy });
         res.status(201).json(todo);
     } catch (error) {
-        // @ts-ignore
-        res.status(400).json({ message: 'Error creating todo', error: error.message });
+        console.error('Error in createTodo:', error);
+        res.status(400).json({ message: 'Error creating todo', error: (error as Error).message });
     }
 };
 
 export const getTodos = async (req: Request, res: Response) => {
     try {
-        if (!req.user) {
-            return res.status(401).json({ message: 'User not authenticated' });
+        const userId = req.user!.id;
+        const userRole = req.user!.role;
+        const { startDate, endDate } = req.query;
+
+        let whereClause: any = {};
+
+        if (startDate && endDate) {
+            whereClause.dueDate = {
+                [Op.between]: [new Date(startDate as string), new Date(endDate as string)]
+            };
         }
 
-        const userId = req.user.id;
-        const userRole = req.user.role;
-
-        let todos;
-        if (userRole === 'admin') {
-            todos = await Todo.findAll({ include: [{ model: User, as: 'assignee' }, { model: User, as: 'creator' }] });
-        } else {
-            todos = await Todo.findAll({
-                where: { assignedTo: userId },
-                include: [{ model: User, as: 'assignee' }, { model: User, as: 'creator' }]
-            });
+        if (userRole !== 'admin') {
+            whereClause.assignedTo = userId;
         }
+
+        const todos = await Todo.findAll({
+            where: whereClause,
+            include: [
+                { model: User, as: 'assignee', attributes: ['id', 'username'] },
+                { model: User, as: 'creator', attributes: ['id', 'username'] }
+            ],
+            order: [
+                ['completed', 'ASC'],
+                ['dueDate', 'ASC'],
+                ['createdAt', 'DESC']
+            ]
+        });
+
         res.json(todos);
     } catch (error) {
-        // @ts-ignore
-        res.status(500).json({ message: 'Error retrieving todos', error: error.message });
+        console.error('Error in getTodos:', error);
+        res.status(500).json({ message: 'Error retrieving todos', error: (error as Error).message });
     }
 };
 

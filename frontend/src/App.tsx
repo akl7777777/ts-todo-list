@@ -7,23 +7,27 @@ import TodoList from './components/TodoList';
 import UserManagement from './components/UserManagement';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 function App() {
     return (
-        <AuthProvider>
-            <Router>
-                <Navigation />
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route element={<ProtectedRoute />}>
-                        <Route path="/todos" element={<TodoList />} />
-                        <Route path="/users" element={<UserManagement />} />
-                    </Route>
-                    <Route path="/" element={<Navigate to="/todos" replace />} />
-                </Routes>
-            </Router>
-        </AuthProvider>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <AuthProvider>
+                <Router>
+                    <Navigation />
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route element={<ProtectedRoute />}>
+                            <Route path="/todos" element={<TodoList />} />
+                            <Route path="/users" element={<UserManagement />} />
+                        </Route>
+                        <Route path="/" element={<Navigate to="/todos" replace />} />
+                    </Routes>
+                </Router>
+            </AuthProvider>
+        </LocalizationProvider>
     );
 }
 

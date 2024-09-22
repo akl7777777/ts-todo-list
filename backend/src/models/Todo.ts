@@ -9,9 +9,8 @@ class Todo extends Model {
     public completed!: boolean;
     public assignedTo!: number;
     public createdBy!: number;
-    public attachment?: string; // 新增：用于存储文件名
-    public readonly createdAt!: Date;
-    public readonly updatedAt!: Date;
+    public dueDate!: Date;
+    public attachment?: string;
 }
 
 Todo.init({
@@ -47,6 +46,10 @@ Todo.init({
             model: User,
             key: 'id',
         },
+    },
+    dueDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
     },
     attachment: {
         type: DataTypes.STRING,
