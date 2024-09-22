@@ -19,6 +19,8 @@ const TodoList: React.FC = () => {
         fetchTodos();
         if (user?.role === 'admin') {
             fetchUsers();
+        } else if (user) {
+            setUsers([user as User]);
         }
     }, [user]);
 
