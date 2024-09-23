@@ -8,6 +8,13 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import DescriptionIcon from '@mui/icons-material/Description';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import SlideshowIcon from '@mui/icons-material/Slideshow';
+import ArchiveIcon from '@mui/icons-material/Archive';
+import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../contexts/AuthContext';
 import { Todo, User, getTodos, createTodo, updateTodo, deleteTodo, uploadFile, getFileUrl, getUsers } from '../services/api';
@@ -98,6 +105,24 @@ const TodoList: React.FC = () => {
     const getOriginalFileName = (fileName: string) => {
         const parts = fileName.split('-');
         return parts.slice(2).join('-');
+    };
+
+    const getFileIcon = (fileName: string) => {
+        if (fileName.match(/\.(pdf)$/i)) {
+            return <PictureAsPdfIcon fontSize="small" />;
+        } else if (fileName.match(/\.(doc|docx)$/i)) {
+            return <DescriptionIcon fontSize="small" />;
+        } else if (fileName.match(/\.(xls|xlsx)$/i)) {
+            return <TableChartIcon fontSize="small" />;
+        } else if (fileName.match(/\.(ppt|pptx)$/i)) {
+            return <SlideshowIcon fontSize="small" />;
+        } else if (fileName.match(/\.(zip|rar|7z)$/i)) {
+            return <ArchiveIcon fontSize="small" />;
+        } else if (fileName.match(/\.(txt)$/i)) {
+            return <TextSnippetIcon fontSize="small" />;
+        } else {
+            return <InsertDriveFileIcon fontSize="small" />;
+        }
     };
 
     const sortedTodos = [...todos].sort((a, b) => {
@@ -251,16 +276,34 @@ const TodoList: React.FC = () => {
                                                             {`Due: ${dayjs(todo.dueDate).format('YYYY-MM-DD')} | Assigned to: ${users.find(u => u.id === todo.assignedTo)?.username || 'Unknown'} | Created by: ${users.find(u => u.id === todo.createdBy)?.username || 'Unknown'}`}
                                                         </Typography>
                                                         {todo.attachment && (
-                                                            <Tooltip title={getOriginalFileName(todo.attachment)}>
-                                                                <IconButton
-                                                                    size="small"
-                                                                    href={getFileUrl(todo.attachment)}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                >
-                                                                    <AttachFileIcon fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
+                                                            <Box mt={1} display="flex" alignItems="center">
+                                                                {todo.attachment.match(/\.(jpeg|jpg|gif|png|bmp|webp|svg)$/i) ? (
+                                                                    <a href={getFileUrl(todo.attachment)} target="_blank" rel="noopener noreferrer">
+                                                                        <img
+                                                                            src={getFileUrl(todo.attachment)}
+                                                                            alt={getOriginalFileName(todo.attachment)}
+                                                                            style={{ maxHeight: '100px', marginRight: '10px' }}
+                                                                        />
+                                                                    </a>
+                                                                ) : todo.attachment.match(/\.(mp4|webm|ogg|avi|mov|wmv|flv|mkv)$/i) ? (
+                                                                    <a href={getFileUrl(todo.attachment)} target="_blank" rel="noopener noreferrer">
+                                                                        <video
+                                                                            src={getFileUrl(todo.attachment)}
+                                                                            style={{ maxHeight: '100px', marginRight: '10px' }}
+                                                                            controls
+                                                                        />
+                                                                    </a>
+                                                                ) : (
+                                                                    <a href={getFileUrl(todo.attachment)} target="_blank" rel="noopener noreferrer">
+                                                                        {getFileIcon(todo.attachment)}
+                                                                    </a>
+                                                                )}
+                                                                <Tooltip title={getOriginalFileName(todo.attachment)}>
+                                                                    <Typography variant="body2" color="textSecondary">
+                                                                        {getOriginalFileName(todo.attachment)}
+                                                                    </Typography>
+                                                                </Tooltip>
+                                                            </Box>
                                                         )}
                                                     </Box>
                                                 }

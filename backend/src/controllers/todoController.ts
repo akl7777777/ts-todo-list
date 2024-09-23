@@ -63,7 +63,12 @@ export const getTodos = async (req: Request, res: Response) => {
             limit
         });
 
-        res.json({ count, todos });
+        const todosWithAttachmentUrl = todos.map(todo => ({
+            ...todo.toJSON(),
+            attachmentUrl: todo.attachment ? `${req.protocol}://${req.get('host')}/uploads/${todo.attachment}` : null
+        }));
+
+        res.json({ count, todos: todosWithAttachmentUrl });
     } catch (error) {
         console.error('Error in getTodos:', error);
         res.status(500).json({ message: 'Error retrieving todos', error: (error as Error).message });
