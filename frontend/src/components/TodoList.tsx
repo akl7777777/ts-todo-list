@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     List, ListItem, ListItemText, ListItemSecondaryAction, IconButton,
     Checkbox, TextField, Button, Paper, Tooltip, Select, MenuItem,
-    FormControl, InputLabel, Container, Grid, Typography, Box, Divider
+    FormControl, InputLabel, Container, Grid, Typography, Box, Divider,
+    Pagination
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -22,6 +23,9 @@ const TodoList: React.FC = () => {
     const [files, setFiles] = useState<File[]>([]);
     const [startDate, setStartDate] = useState<Dayjs | null>(null);
     const [endDate, setEndDate] = useState<Dayjs | null>(null);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -31,12 +35,13 @@ const TodoList: React.FC = () => {
         } else if (user) {
             setUsers([user as User]);
         }
-    }, [user, startDate, endDate]);
+    }, [user, startDate, endDate, page, pageSize]);
 
     const fetchTodos = useCallback(async () => {
-        const fetchedTodos = await getTodos(startDate?.toDate(), endDate?.toDate());
+        const { count, todos: fetchedTodos } = await getTodos(startDate?.toDate(), endDate?.toDate(), page, pageSize);
         setTodos(fetchedTodos);
-    }, [startDate, endDate]);
+        setTotalCount(count);
+    }, [startDate, endDate, page, pageSize]);
 
     const fetchUsers = async () => {
         const fetchedUsers = await getUsers();
@@ -172,6 +177,13 @@ const TodoList: React.FC = () => {
                                                 {files.map((file, index) => (
                                                     <ListItem key={index}>
                                                         <ListItemText primary={file.name} />
+                                                        {file.type.startsWith('image/') && (
+                                                            <img
+                                                                src={URL.createObjectURL(file)}
+                                                                alt={file.name}
+                                                                style={{ maxHeight: '100px', marginLeft: '10px' }}
+                                                            />
+                                                        )}
                                                     </ListItem>
                                                 ))}
                                             </List>
@@ -265,6 +277,14 @@ const TodoList: React.FC = () => {
                                     </React.Fragment>
                                 ))}
                             </List>
+                            <Pagination
+                                count={Math.ceil(totalCount / pageSize)}
+                                page={page}
+                                onChange={(event, value) => {
+                                    setPage(value);
+                                }}
+                                color="primary"
+                            />
                         </Paper>
                     </Grid>
                 </Grid>

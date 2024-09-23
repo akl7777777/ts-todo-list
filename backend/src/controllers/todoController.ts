@@ -31,7 +31,7 @@ export const getTodos = async (req: Request, res: Response) => {
     try {
         const userId = req.user!.id;
         const userRole = req.user!.role;
-        const { startDate, endDate } = req.query;
+        const { startDate, endDate, page = 1, pageSize = 10 } = req.query;
 
         let whereClause: any = {};
 
@@ -45,7 +45,10 @@ export const getTodos = async (req: Request, res: Response) => {
             whereClause.assignedTo = userId;
         }
 
-        const todos = await Todo.findAll({
+        const offset = (parseInt(page as string) - 1) * parseInt(pageSize as string);
+        const limit = parseInt(pageSize as string);
+
+        const { count, rows: todos } = await Todo.findAndCountAll({
             where: whereClause,
             include: [
                 { model: User, as: 'assignee', attributes: ['id', 'username'] },
@@ -55,10 +58,12 @@ export const getTodos = async (req: Request, res: Response) => {
                 ['completed', 'ASC'],
                 ['dueDate', 'ASC'],
                 ['createdAt', 'DESC']
-            ]
+            ],
+            offset,
+            limit
         });
 
-        res.json(todos);
+        res.json({ count, todos });
     } catch (error) {
         console.error('Error in getTodos:', error);
         res.status(500).json({ message: 'Error retrieving todos', error: (error as Error).message });
