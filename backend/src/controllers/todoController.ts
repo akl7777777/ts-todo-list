@@ -12,10 +12,16 @@ export const createTodo = async (req: Request, res: Response) => {
         const { title, description, assignedTo, dueDate } = req.body;
         const createdBy = req.user!.id;
 
+        // 确保 assignedTo 是一个有效的整数
+        const assignedToId = parseInt(assignedTo);
+        if (isNaN(assignedToId)) {
+            return res.status(400).json({ message: 'Invalid assignedTo value' });
+        }
+
         const todo = await Todo.create({
             title,
             description,
-            assignedTo,
+            assignedTo: assignedToId,
             createdBy,
             dueDate: dueDate ? new Date(dueDate) : null
         });
@@ -137,8 +143,8 @@ export const uploadFile = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Todo not found' });
         }
 
-        if (!req.file) {
-            return res.status(400).json({ message: 'No file uploaded' });
+        if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+            return res.status(400).json({ message: 'No files uploaded' });
         }
 
         const uploadDir = path.join(__dirname, '..', '..', 'uploads');
@@ -146,17 +152,22 @@ export const uploadFile = async (req: Request, res: Response) => {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        const uniqueId = crypto.randomBytes(8).toString('hex');
-        const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
-        const safeFileName = `${Date.now()}-${uniqueId}-${originalName}`;
-        const filePath = path.join(uploadDir, safeFileName);
+        const uploadedFiles = [];
 
-        fs.writeFileSync(filePath, req.file.buffer);
+        for (const file of req.files) {
+            const uniqueId = crypto.randomBytes(8).toString('hex');
+            const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+            const safeFileName = `${Date.now()}-${uniqueId}-${originalName}`;
+            const filePath = path.join(uploadDir, safeFileName);
 
-        await todo.update({ attachment: safeFileName });
+            fs.writeFileSync(filePath, file.buffer);
+            uploadedFiles.push(safeFileName);
+        }
 
-        res.json({ message: 'File uploaded successfully', fileName: safeFileName });
+        await todo.update({ attachment: uploadedFiles.join(',') });
+
+        res.json({ message: 'Files uploaded successfully', fileNames: uploadedFiles });
     } catch (error) {
-        res.status(500).json({ message: 'Error uploading file', error: (error as Error).message });
+        res.status(500).json({ message: 'Error uploading files', error: (error as Error).message });
     }
 };

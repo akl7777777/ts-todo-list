@@ -52,7 +52,7 @@ Todo.init({
         allowNull: true,
     },
     attachment: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,  // 使用 TEXT 类型来存储较长的字符串
         allowNull: true,
     },
 }, {

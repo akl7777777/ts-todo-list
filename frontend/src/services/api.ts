@@ -12,7 +12,6 @@ const api = axios.create({
 
 export const getFileUrl = (fileName: string) => `${FILE_BASE_URL}/uploads/${fileName}`;
 
-
 // const api = axios.create({
 //     baseURL: API_URL,
 // });
@@ -26,7 +25,8 @@ export interface Todo {
     assignedTo: number;
     createdBy: number;
     dueDate?: Date;
-    attachment?: string;
+    attachment?: string; // 保留这个以保持向后兼容
+    attachments?: string[]; // 添加这个新字段
 }
 
 // 定义 User 接口
@@ -102,14 +102,13 @@ export const updateUserRole = async (userId: number, newRole: 'admin' | 'user'):
     return response.data;
 };
 
-export const uploadFile = async (todoId: number, file: File): Promise<void> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    await api.post(`/todos/${todoId}/upload`, formData, {
+export const uploadFile = async (todoId: number, formData: FormData) => {
+    const response = await api.post(`/todos/${todoId}/upload`, formData, {
         headers: {
-            'Content-Type': 'multipart/form-data'
-        }
+            'Content-Type': 'multipart/form-data',
+        },
     });
+    return response.data;
 };
 
 export default api;

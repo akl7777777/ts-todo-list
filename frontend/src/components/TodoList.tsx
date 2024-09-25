@@ -64,12 +64,14 @@ const TodoList: React.FC = () => {
     const handleCreateTodo = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newTodoTitle.trim() && user) {
-            const assignee = user.role === 'admin' ? (assignedTo as number) : user.id;
+            const assignee = user.role === 'admin' ? (assignedTo || user.id) : user.id;
             const todo = await createTodo(newTodoTitle, newTodoDescription, assignee, newTodoDueDate?.toDate());
             if (files.length > 0) {
-                for (const file of files) {
-                    await uploadFile(todo.id, file);
-                }
+                const formData = new FormData();
+                files.forEach((file) => {
+                    formData.append('files', file);
+                });
+                await uploadFile(todo.id, formData);
             }
             setNewTodoTitle('');
             setNewTodoDescription('');
@@ -124,6 +126,37 @@ const TodoList: React.FC = () => {
             return <InsertDriveFileIcon fontSize="small" />;
         }
     };
+
+    const renderAttachment = (attachment: string) => (
+        <>
+            {attachment.match(/\.(jpeg|jpg|gif|png|bmp|webp|svg)$/i) ? (
+                <a href={getFileUrl(attachment)} target="_blank" rel="noopener noreferrer">
+                    <img
+                        src={getFileUrl(attachment)}
+                        alt={getOriginalFileName(attachment)}
+                        style={{ maxHeight: '100px', marginRight: '10px' }}
+                    />
+                </a>
+            ) : attachment.match(/\.(mp4|webm|ogg|avi|mov|wmv|flv|mkv)$/i) ? (
+                <a href={getFileUrl(attachment)} target="_blank" rel="noopener noreferrer">
+                    <video
+                        src={getFileUrl(attachment)}
+                        style={{ maxHeight: '100px', marginRight: '10px' }}
+                        controls
+                    />
+                </a>
+            ) : (
+                <a href={getFileUrl(attachment)} target="_blank" rel="noopener noreferrer">
+                    {getFileIcon(attachment)}
+                </a>
+            )}
+            <Tooltip title={getOriginalFileName(attachment)}>
+                <Typography variant="body2" color="textSecondary">
+                    {getOriginalFileName(attachment)}
+                </Typography>
+            </Tooltip>
+        </>
+    );
 
     const sortedTodos = [...todos].sort((a, b) => {
         if (a.completed === b.completed) {
@@ -275,34 +308,17 @@ const TodoList: React.FC = () => {
                                                         <Typography variant="caption" color="textSecondary">
                                                             {`Due: ${dayjs(todo.dueDate).format('YYYY-MM-DD')} | Assigned to: ${users.find(u => u.id === todo.assignedTo)?.username || 'Unknown'} | Created by: ${users.find(u => u.id === todo.createdBy)?.username || 'Unknown'}`}
                                                         </Typography>
-                                                        {todo.attachment && (
-                                                            <Box mt={1} display="flex" alignItems="center">
-                                                                {todo.attachment.match(/\.(jpeg|jpg|gif|png|bmp|webp|svg)$/i) ? (
-                                                                    <a href={getFileUrl(todo.attachment)} target="_blank" rel="noopener noreferrer">
-                                                                        <img
-                                                                            src={getFileUrl(todo.attachment)}
-                                                                            alt={getOriginalFileName(todo.attachment)}
-                                                                            style={{ maxHeight: '100px', marginRight: '10px' }}
-                                                                        />
-                                                                    </a>
-                                                                ) : todo.attachment.match(/\.(mp4|webm|ogg|avi|mov|wmv|flv|mkv)$/i) ? (
-                                                                    <a href={getFileUrl(todo.attachment)} target="_blank" rel="noopener noreferrer">
-                                                                        <video
-                                                                            src={getFileUrl(todo.attachment)}
-                                                                            style={{ maxHeight: '100px', marginRight: '10px' }}
-                                                                            controls
-                                                                        />
-                                                                    </a>
-                                                                ) : (
-                                                                    <a href={getFileUrl(todo.attachment)} target="_blank" rel="noopener noreferrer">
-                                                                        {getFileIcon(todo.attachment)}
-                                                                    </a>
+                                                        {((todo.attachments && todo.attachments.length > 0) || todo.attachment) && (
+                                                            <Box mt={1}>
+                                                                {todo.attachment && (
+                                                                    <Box mt={1}>
+                                                                        {todo.attachment.split(',').map((attachment, index) => (
+                                                                            <Box key={index} display="flex" alignItems="center" mb={1}>
+                                                                                {renderAttachment(attachment)}
+                                                                            </Box>
+                                                                        ))}
+                                                                    </Box>
                                                                 )}
-                                                                <Tooltip title={getOriginalFileName(todo.attachment)}>
-                                                                    <Typography variant="body2" color="textSecondary">
-                                                                        {getOriginalFileName(todo.attachment)}
-                                                                    </Typography>
-                                                                </Tooltip>
                                                             </Box>
                                                         )}
                                                     </Box>

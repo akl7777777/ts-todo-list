@@ -12,6 +12,6 @@ router.post('/', createTodo);
 router.get('/', getTodos);
 router.put('/:id', updateTodo);
 router.delete('/:id', deleteTodo);
-router.post('/:id/upload', upload.single('file'), uploadFile);
+router.post('/:id/upload', upload.array('files'), uploadFile);
 
 export default router;
