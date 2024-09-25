@@ -17,6 +17,9 @@ services:
       - DB_USER=root
       - DB_PASSWORD=rootpassword
       - DB_NAME=ts_todo_list
+      - JWT_SECRET=your_jwt_secret
+    volumes:
+      - ./backend/uploads:/app/uploads
     depends_on:
       - db
 
