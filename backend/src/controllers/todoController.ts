@@ -35,11 +35,16 @@ export const createTodo = async (req: Request, res: Response) => {
 
 export const getTodos = async (req: Request, res: Response) => {
     try {
+        const { startDate, endDate, page = 1, pageSize = 10, search } = req.query;
         const userId = req.user!.id;
-        const userRole = req.user!.role;
-        const { startDate, endDate, page = 1, pageSize = 10 } = req.query;
+        const offset = (Number(page) - 1) * Number(pageSize);
 
-        let whereClause: any = {};
+        let whereClause: any = {
+            [Op.or]: [
+                { assignedTo: userId },
+                { createdBy: userId }
+            ]
+        };
 
         if (startDate && endDate) {
             whereClause.dueDate = {
@@ -47,37 +52,28 @@ export const getTodos = async (req: Request, res: Response) => {
             };
         }
 
-        if (userRole !== 'admin') {
-            whereClause.assignedTo = userId;
+        if (search) {
+            whereClause[Op.or] = [
+                { title: { [Op.like]: `%${search}%` } },
+                { description: { [Op.like]: `%${search}%` } }
+            ];
         }
 
-        const offset = (parseInt(page as string) - 1) * parseInt(pageSize as string);
-        const limit = parseInt(pageSize as string);
-
-        const { count, rows: todos } = await Todo.findAndCountAll({
+        const { count, rows } = await Todo.findAndCountAll({
             where: whereClause,
             include: [
                 { model: User, as: 'assignee', attributes: ['id', 'username'] },
                 { model: User, as: 'creator', attributes: ['id', 'username'] }
             ],
-            order: [
-                ['completed', 'ASC'],
-                ['dueDate', 'ASC'],
-                ['createdAt', 'DESC']
-            ],
+            order: [['dueDate', 'ASC']],
             offset,
-            limit
+            limit: Number(pageSize)
         });
 
-        const todosWithAttachmentUrl = todos.map(todo => ({
-            ...todo.toJSON(),
-            attachmentUrl: todo.attachment ? `${req.protocol}://${req.get('host')}/uploads/${todo.attachment}` : null
-        }));
-
-        res.json({ count, todos: todosWithAttachmentUrl });
+        res.json({ count, todos: rows });
     } catch (error) {
-        console.error('Error in getTodos:', error);
-        res.status(500).json({ message: 'Error retrieving todos', error: (error as Error).message });
+        console.error('Error fetching todos:', error);
+        res.status(500).json({ message: 'Error fetching todos' });
     }
 };
 

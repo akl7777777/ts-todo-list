@@ -3,7 +3,7 @@ import {
     List, ListItem, ListItemText, ListItemSecondaryAction, IconButton,
     Checkbox, TextField, Button, Paper, Tooltip, Select, MenuItem,
     FormControl, InputLabel, Container, Grid, Typography, Box, Divider,
-    Pagination
+    Pagination, InputAdornment
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -15,6 +15,7 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
+import SearchIcon from '@mui/icons-material/Search';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../contexts/AuthContext';
 import { Todo, User, getTodos, createTodo, updateTodo, deleteTodo, uploadFile, getFileUrl, getUsers } from '../services/api';
@@ -34,6 +35,7 @@ const TodoList: React.FC = () => {
     const [pageSize, setPageSize] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const { user } = useAuth();
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         fetchTodos();
@@ -42,13 +44,13 @@ const TodoList: React.FC = () => {
         } else if (user) {
             setUsers([user as User]);
         }
-    }, [user, startDate, endDate, page, pageSize]);
+    }, [user, startDate, endDate, page, pageSize, searchTerm]);
 
     const fetchTodos = useCallback(async () => {
-        const { count, todos: fetchedTodos } = await getTodos(startDate?.toDate(), endDate?.toDate(), page, pageSize);
+        const { count, todos: fetchedTodos } = await getTodos(startDate?.toDate(), endDate?.toDate(), page, pageSize, searchTerm);
         setTodos(fetchedTodos);
         setTotalCount(count);
-    }, [startDate, endDate, page, pageSize]);
+    }, [startDate, endDate, page, pageSize, searchTerm]);
 
     const fetchUsers = async () => {
         const fetchedUsers = await getUsers();
@@ -165,12 +167,60 @@ const TodoList: React.FC = () => {
         return a.completed ? 1 : -1;
     });
 
+    const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(event.target.value);
+    };
+
     return (
         <Container maxWidth="lg">
             <Box my={4}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    To do List
+                    待办事项列表
                 </Typography>
+                <Grid container spacing={3} alignItems="center" mb={3}>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            variant="outlined"
+                            label="搜索待办事项"
+                            value={searchTerm}
+                            onChange={handleSearch}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                        <DatePicker
+                            label="开始日期"
+                            value={startDate}
+                            onChange={(date) => setStartDate(date)}
+                            slots={{
+                                textField: TextField,
+                            }}
+                            slotProps={{
+                                textField: { fullWidth: true },
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                        <DatePicker
+                            label="结束日期"
+                            value={endDate}
+                            onChange={(date) => setEndDate(date)}
+                            slots={{
+                                textField: TextField,
+                            }}
+                            slotProps={{
+                                textField: { fullWidth: true },
+                            }}
+                        />
+                    </Grid>
+                </Grid>
                 <Grid container spacing={3}>
                     <Grid item xs={12} md={4}>
                         <Paper elevation={3}>
@@ -256,36 +306,6 @@ const TodoList: React.FC = () => {
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <Paper elevation={3}>
-                            <Box p={2}>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} sm={6}>
-                                        <DatePicker
-                                            label="Start Date"
-                                            value={startDate}
-                                            onChange={(date) => setStartDate(date)}
-                                            slots={{
-                                                textField: TextField,
-                                            }}
-                                            slotProps={{
-                                                textField: { fullWidth: true },
-                                            }}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <DatePicker
-                                            label="End Date"
-                                            value={endDate}
-                                            onChange={(date) => setEndDate(date)}
-                                            slots={{
-                                                textField: TextField,
-                                            }}
-                                            slotProps={{
-                                                textField: { fullWidth: true },
-                                            }}
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </Box>
                             <List>
                                 {sortedTodos.map((todo) => (
                                     <React.Fragment key={todo.id}>

@@ -69,10 +69,13 @@ export const register = async (username: string, email: string, password: string
     return response.data;
 };
 
-export const getTodos = async (startDate?: Date | null, endDate?: Date | null, page = 1, pageSize = 10): Promise<{ count: number, todos: Todo[] }> => {
+export const getTodos = async (startDate?: Date | null, endDate?: Date | null, page = 1, pageSize = 10, searchTerm = ''): Promise<{ count: number, todos: Todo[] }> => {
     let url = `/todos?page=${page}&pageSize=${pageSize}`;
     if (startDate && endDate) {
         url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
+    }
+    if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
     }
     const response = await api.get(url);
     return response.data;
